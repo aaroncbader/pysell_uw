@@ -2,15 +2,14 @@
 Author: Aaron Bader, UW-Madison 2020
 Co-author: Ahnaf Tahmid Chowdhury, MIST 2024
 
-This file provides functionality to read data from a VMEC wout file and 
-plot various quantities of interest. It offers versatility for plotting, 
+This file provides functionality to read data from a VMEC wout file and
+plot various quantities of interest. It offers versatility for plotting,
 displaying plots, or exporting data.
 """
 
 from netCDF4 import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
-import imp
 from matplotlib import cm
 from scipy.optimize import fsolve
 import scipy.integrate as integrate
@@ -19,9 +18,8 @@ from scipy.optimize import minimize
 import logging
 
 try:
-    imp.find_module("mayavi")
-    use_mayavi = True
     from mayavi import mlab
+    use_mayavi = True
     import vtk
 except ImportError:
     use_mayavi = False
@@ -85,7 +83,7 @@ class VMECData:
     - interpl_at (int): Normalized flux coordinate for last interpolation of lambda coefficients.
     - linterp (np.ndarray): Array of lambda coefficients after interpolation.
     - iotaspl (CubicSpline): Cubic spline interpolation of rotational transform.
-    
+
     Examples:
     >>> from pystell import VMECData
     >>> v = VMECData('wout_0001.nc')
@@ -167,7 +165,7 @@ class VMECData:
 
         Returns:
         - fs (int or float): Index of the flux surface.
-        
+
         Examples:
         >>> v = VMECData.s2fs(0.5)
         """
@@ -186,7 +184,7 @@ class VMECData:
 
         Returns:
         - s (float): Normalized flux value.
-        
+
         Examples:
         >>> v = VMECData.fs2s(0)
         """
@@ -200,7 +198,7 @@ class VMECData:
 
         Returns:
         - Minor radius (float): The computed minor radius.
-        
+
         Examples:
         >>> v = VMECData.bean_radius_horizontal()
         """
@@ -261,7 +259,7 @@ class VMECData:
 
         Returns:
         - Mirror term (float): Calculated mirror term.
-        
+
         Examples:
         >>> v = VMECData.mirror(0.5)
         """
@@ -281,7 +279,7 @@ class VMECData:
 
         Returns:
         - modb (float): Calculated modb at the specified point.
-        
+
         Examples:
         >>> v = VMECData.modb_at_point(0.5, 0.5, 0.5)
         """
@@ -316,7 +314,7 @@ class VMECData:
         - phi (numpy.ndarray): Toroidal angle array.
         - modB (numpy.ndarray): Calculated modb values along the field line.
         - theta (numpy.ndarray): Poloidal angle array.
-        
+
         Examples:
         >>> phi, modb, theta = v.modb_on_fieldline(0)
         """
@@ -381,12 +379,12 @@ class VMECData:
         - phi (numpy.ndarray): Toroidal angle coordinates along the field line.
         - zarr (numpy.ndarray): Z coordinates along the field line.
         - modB (numpy.ndarray): Values along the field line.
-        
+
         Examples:
         >>> xarr, yarr, zarr, modB = v.xyz_on_fieldline(0, 0, 0)
         >>> rarr, phi, zarr, modB = v.xyz_on_fieldline(0, 0, 0, retrpz=True)
         """
-        
+
         if not invmec and not inrpz:
             s, theta, zeta = self.xyz2vmec(x, y, z)
         elif not invmec and inrpz:
@@ -478,11 +476,11 @@ class VMECData:
 
         Returns:
         - xyz (list): List containing arrays of x, y, z, and modB values on the surface.
-        
+
         Examples:
         >>> v.modb_on_surface(s=0.5, ntheta=64, nphi=64, plot=True, show=True)
         """
-        
+
         # first attempt will use trisurface, let's see how it looks
         r = np.zeros([nphi, ntheta])
         z = np.zeros([nphi, ntheta])
@@ -565,11 +563,11 @@ class VMECData:
         Returns:
         - r (float): Radial coordinate of the magnetic axis.
         - z (float): Vertical coordinate of the magnetic axis.
-        
+
         Examples:
         >>> v.axis(0.0)
         """
-        
+
         r = 0
         z = 0
         for i in range(len(self.raxis)):
@@ -588,11 +586,11 @@ class VMECData:
         Returns:
         - s (np.ndarray): Normalized flux values.
         - iota (np.ndarray): Rotational transform values.
-        
+
         Examples:
         >>> v.plot_iota()
         """
-        
+
         s = self.psi[1:] / self.psi[-1]
         if plot:
             plt.plot(s, self.iota[1:])
@@ -611,11 +609,11 @@ class VMECData:
         Returns:
         - s (np.ndarray): Normalized flux values.
         - pres (np.ndarray): Pressure profile values.
-        
+
         Examples:
         >>> v.pressure(show=True)
         """
-        
+
         s = self.psi[1:] / self.psi[-1]
         pres = self.pres[1:]
         if plot:
@@ -635,11 +633,11 @@ class VMECData:
         Returns:
         - s (np.ndarray): Normalized flux values.
         - jdotb (np.ndarray): Current profile values.
-        
+
         Examples:
         >>> v.current()
         """
-        
+
         s = self.psi[1:] / self.psi[-1]
         jdotb = self.jdotb[1:]
         if plot:
@@ -659,11 +657,11 @@ class VMECData:
 
         Returns:
         - r (float): Radial coordinate at the specified point.
-        
+
         Examples:
         >>> v.r_at_point(0.0, 0.0, 0.0)
         """
-        
+
         self.interp_val(s, fourier="r")
         return sum(self.rinterp * np.cos(self.xm * theta - self.xn * phi))
 
@@ -678,11 +676,11 @@ class VMECData:
 
         Returns:
         - z (float): Vertical coordinate at the specified point.
-        
+
         Examples:
         >>> v.z_at_point(0.0, 0.0, 0.0)
         """
-        
+
         self.interp_val(s, fourier="z")
         return sum(self.zinterp * np.sin(self.xm * theta - self.xn * phi))
 
@@ -697,11 +695,11 @@ class VMECData:
 
         Returns:
         - v (float): Interpolated value at the specified flux surface and mode number.
-        
+
         Examples:
         >>> v.interp_half(np.array([[1.0, 2.0], [3.0, 4.0]]), 0.5, 0)
         """
-        
+
         if s < self.shalf[1]:
             v = val[1, mn]
         elif s > self.shalf[-1]:
@@ -722,11 +720,11 @@ class VMECData:
 
         Returns:
         - dvds (float): Volume derivative at the specified flux surface.
-        
+
         Examples:
         >>> v.dvds(0.5)
         """
-        
+
         if not interpolate:
             # if we don't want to interpolate, then get an actual value
             fs = self.s2fs(s)
@@ -746,7 +744,7 @@ class VMECData:
 
         Returns:
         - bsq (float): The average of B^2 over the flux surface.
-        
+
         Examples:
         >>> v.well(0.5)
         """
@@ -792,11 +790,11 @@ class VMECData:
 
         Returns:
         - CubicSpline objects (list): CubicSpline objects for b00, db00, vol, and g00.
-        
+
         Examples:
         >>> v.well_simp(0.5, plot=True, show=True)
         """
-        
+
         b00_spl = interp.CubicSpline(self.shalf, self.bmnc[:, 0])
         g00_spl = interp.CubicSpline(self.shalf, 4 * np.pi**2 * abs(self.gmnc[:, 0]))
         vol_spl = g00_spl.antiderivative()
@@ -833,7 +831,7 @@ class VMECData:
 
         Raises:
         - ValueError: If fourier is not one of "b", "r", "z", or "l".
-        
+
         Examples:
         >>> v.interp_val(0.5, fourier="l")
         """
@@ -882,7 +880,7 @@ class VMECData:
         - r (float): Radial coordinate.
         - zeta (float): Toroidal angle.
         - z (float): Vertical coordinate.
-        
+
         Examples:
         >>> v.vmec2rpz(0.5, 0.5, 0.5)
         """
@@ -911,11 +909,11 @@ class VMECData:
         - x (float): Cartesian x-coordinate.
         - y (float): Cartesian y-coordinate.
         - z (float): Cartesian z-coordinate.
-        
+
         Examples:
         >>> v.vmec2xyz(0.5, 0.5, 0.5)
         """
-        
+
         r, phi, z = self.vmec2rpz(s, theta, zeta)
         x = r * np.cos(phi)
         y = r * np.sin(phi)
@@ -932,11 +930,11 @@ class VMECData:
 
         Returns:
         - VMEC coordinates (list): [s, theta, zeta].
-        
+
         Examples:
         >>> v.xyz2vmec(0.5, 0.5, 0.5)
         """
-        
+
         r = np.sqrt(x**2 + y**2)
         phi = np.arctan2(y, x)
         return self.rpz2vmec(r, phi, z)
@@ -952,7 +950,7 @@ class VMECData:
 
         Returns:
         - VMEC coordinates (list): [s, theta, zeta].
-        
+
         Examples:
         >>> v.rpz2vmec(0.5, 0.5, 0.5)
         """
@@ -1037,10 +1035,10 @@ class VMECData:
         - theta (float): Poloidal angle in radians.
         - r0 (float): Radial coordinate of a reference point (optional, default is None).
         - z0 (float): Vertical coordinate of a reference point (optional, default is None).
-        
+
         Returns:
         - s_guess (float): Guessed normalized toroidal flux coordinate (s).
-        
+
         Examples:
         >>> v.sguess(0.5, 0.5)
         """
